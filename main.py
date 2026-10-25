@@ -1,93 +1,132 @@
-from core.Encryption.chunker import DataChunker
+# =====================================================================
+# [EN] Main execution entry point for Mathematical Security Protocol.
+# [MY] သင်္ချာအခြေပြု လုံခြုံရေး ပရိုတိုကော၏ ပင်မ စတင်ရေးဆွဲသည့် ဖိုင်။
+# =====================================================================
+
+from core.Encryption.chunker import Chunker
 from core.Encryption.localforwardtransformer import LocalForwardTransformer
 from core.Encryption.globalforwardtransformer import GlobalForwardTransformer
+from core.Encryption.decoy_injector import DecoyInjector
+
+from core.Decryption.decoy_filter import DecoyFilter
 from core.Decryption.globalreversetransformer import GlobalReverseTransformer
 from core.Decryption.localreversetransformer import LocalReverseTransformer
-from core.Decryption.combiner import DataCombiner
+from core.Decryption.combiner import Combiner
 
 def main():
-    print("=" * 65)
-    print("   MATH FOR SYSTEMS SECURITY: LAYERED PIPELINE TEST")
-    print("=" * 65)
+    print("=" * 75)
+    print("      MATHEMATICAL SECURITY PROTOCOL - FULL LAYERED PIPELINE DEMO      ")
+    print("=" * 75)
     
-    # 1. Request user input / User ထံမှ စာသားတောင်းခံခြင်း
-    user_input = input("\n> Enter your secret text to encrypt/chunk: ")
-    
-    if not user_input.strip():
-        print("[-] Error: Input cannot be empty! (ထည့်သွင်းထားသော စာသား မရှိပါ)")
-        return
+    # -----------------------------------------------------------------
+    # STEP 1: User Input & Initial Setup
+    # -----------------------------------------------------------------
+    user_input = input("\n[INPUT] Enter secret text to encrypt: ").strip()
+    if not user_input:
+        user_input = "I love ko kit. He is handsome easygoing and really kind to everyone,"
+        print(f"-> Using default test text: \"{user_input}\"")
 
-    # Set chunk size & batch size / Chunk နှင့် Batch အရွယ်အစား သတ်မှတ်ခြင်း
-    chunk_size = 12
-    batch_size = 100
-    print(f"\n[+] Processing with chunk_size = {chunk_size}, batch_size = {batch_size}...")
+    # -----------------------------------------------------------------
+    # STEP 2: Chunker Layer
+    # -----------------------------------------------------------------
+    print("\n" + "-" * 75)
+    print("[STEP 1 - ENCRYPTION] Chunking Input Text...")
+    chunker = Chunker(chunk_size=12)
+    original_chunks = chunker.to_chunks(user_input)
+    print(f"-> Total Chunks Created: {len(original_chunks)}")
+    for i, c in enumerate(original_chunks[:3], 1):
+        print(f"   Chunk {i}: {c}")
+    if len(original_chunks) > 3:
+        print(f"   ... (and {len(original_chunks) - 3} more chunks)")
 
-    # 2. Step 1: Chunker Module (Convert text to low-level chunks)
-    # စာသားကို Chunker ဖြင့် အပိုင်းငယ်များအဖြစ် ခွဲထုတ်ခြင်း
-    chunker = DataChunker(chunk_size=chunk_size)
-    low_level_chunks = chunker.text_to_low_level_chunks(user_input)
-    
-    print(f"\n[STEP 1 - SUCCESS] Chunker generated {len(low_level_chunks)} chunks.")
-    for idx, chunk in enumerate(low_level_chunks):
-        print(f"  -> Original Chunk {idx + 1}: {chunk}")
+    # -----------------------------------------------------------------
+    # STEP 3: Local Forward Transformation (Enciphering Bytes)
+    # -----------------------------------------------------------------
+    print("\n" + "-" * 75)
+    print("[STEP 2 - ENCRYPTION] Local Forward Transformation (Confusion)...")
+    local_forward = LocalForwardTransformer(chunk_size=12)
+    local_encrypted_chunks = local_forward.transform_chunks(original_chunks)
+    for i, c in enumerate(local_encrypted_chunks[:3], 1):
+        print(f"   Encrypted Chunk {i}: {c}")
 
-    # 3. Step 2: Local Forward Transformer Module (Local Encryption)
-    # ဒုတိယအဆင့် - Local Forward ဖြင့် Chunk တစ်ခုချင်းစီ၏ အတွင်းပိုင်းတန်ဖိုးများကို အရင်ဝှက်ခြင်း (Confusion)
-    local_forward = LocalForwardTransformer(chunk_size=chunk_size)
-    locally_encrypted_chunks = local_forward.transform_chunks(low_level_chunks)
-    
-    print(f"\n[STEP 2 - SUCCESS] Local Forward Transformation (Encryption) completed.")
-    for idx, chunk in enumerate(locally_encrypted_chunks):
-        print(f"  -> Locally Encrypted Chunk {idx + 1}: {chunk}")
+    # -----------------------------------------------------------------
+    # STEP 4: Global Forward Transformation (Prime-Weight Shuffling)
+    # -----------------------------------------------------------------
+    print("\n" + "-" * 75)
+    print("[STEP 3 - ENCRYPTION] Global Forward Transformation (Diffusion)...")
+    global_forward = GlobalForwardTransformer(batch_size=100)
+    shuffled_chunks, prime_weights = global_forward.transform_global(local_encrypted_chunks)
+    print(f"-> Calculated Prime Weights Sample: {prime_weights[:5]}...")
+    for i, c in enumerate(shuffled_chunks[:3], 1):
+        print(f"   Shuffled Chunk {i}: {c}")
 
-    # 4. Step 3: Global Forward Transformer Module (Global Diffusion & Shuffling)
-    # တတိယအဆင့် - Global Forward ဖြင့် ဝှက်ပြီးသား Chunk များကို Prime Index များသုံး၍ အစဉ်ပြောင်းလဲရောနှောခြင်း (Diffusion)
-    global_forward = GlobalForwardTransformer(batch_size=batch_size)
-    fully_encrypted_chunks, shuffle_metadata = global_forward.transform_global(locally_encrypted_chunks)
+    # -----------------------------------------------------------------
+    # STEP 5: Decoy Injection (1-1000 Cycle Prime Obfuscation)
+    # -----------------------------------------------------------------
+    print("\n" + "-" * 75)
+    print("[STEP 4 - ENCRYPTION] Decoy Injection Layer (1 to 1000 Cycle Obfuscation)...")
+    injector = DecoyInjector(cycle_limit=1000)
+    mixed_stream, metadata = injector.inject_decoys(shuffled_chunks)
+    print(f"-> Generated Total Mixed Stream: {len(mixed_stream)} Packets (1000 Cycle)")
     
-    print(f"\n[STEP 3 - SUCCESS] Global Forward Transformation (Prime Shuffling) completed.")
-    print(f"  -> Shuffle Metadata (Prime Weights): {shuffle_metadata}")
-    for idx, chunk in enumerate(fully_encrypted_chunks):
-        print(f"  -> Fully Encrypted & Shuffled Chunk {idx + 1}: {chunk}")
+    real_indices = [m['index'] for m in metadata if m['is_real']][:5]
+    decoy_indices = [m['index'] for m in metadata if not m['is_real']][:5]
+    print(f"   First 5 Real Indices (Primes)   : {real_indices}")
+    print(f"   First 5 Decoy Indices (Non-Primes): {decoy_indices}")
 
-    # ==========================================
-    # DECRYPTION PIPELINE (ပြန်လည်ဖော်ထုတ်ခြင်း အဆင့်များ - ပြောင်းပြန်စနစ်)
-    # ==========================================
+    # =================================================================
+    # RECEIVER SIDE DECRYPTION PIPELINE
+    # =================================================================
+    print("\n" + "=" * 75)
+    print("                     STARTING RECEIVER DECRYPTION                      ")
+    print("=" * 75)
 
-    # 5. Step 4: Global Reverse Transformer Module (Global Un-shuffling via Search & Sort)
-    # ပထမအဆင့် (ပြန်ဖြည်စဉ်) - Global Reverse ဖြင့် Metadata ကိုသုံးကာ Search & Sort လုပ်၍ Chunk များကို မူလအစဉ်အတိုင်း ပြန်စီခြင်း
-    global_reverse = GlobalReverseTransformer(batch_size=batch_size)
-    globally_restored_chunks = global_reverse.reverse_global(fully_encrypted_chunks, shuffle_metadata)
-    
-    print(f"\n[STEP 4 - SUCCESS] Global Reverse Transformation (Search & Sort) completed.")
-    for idx, chunk in enumerate(globally_restored_chunks):
-        print(f"  -> Reordered Chunk {idx + 1}: {chunk}")
+    # -----------------------------------------------------------------
+    # STEP 6: Decoy Filtering Layer (Discard Fake Packets)
+    # -----------------------------------------------------------------
+    print("\n" + "-" * 75)
+    print("[STEP 5 - DECRYPTION] Decoy Filtering (Extracting Prime Index Chunks)...")
+    decoy_filter = DecoyFilter()
+    filtered_chunks = decoy_filter.filter_real_chunks(mixed_stream, metadata)
+    print(f"-> Successfully Filtered Real Chunks: {len(filtered_chunks)} / {len(mixed_stream)}")
 
-    # 6. Step 5: Local Reverse Transformer Module (Local Decryption)
-    # ဒုတိယအဆင့် (ပြန်ဖြည်စဉ်) - Local Reverse ဖြင့် ဝှက်ထားသော အတွင်းပိုင်းတန်ဖိုးများကို ပြန်လည်ဖော်ထုတ်ခြင်း (Decryption)
-    local_reverse = LocalReverseTransformer(chunk_size=chunk_size)
-    decrypted_chunks = local_reverse.reverse_chunks(globally_restored_chunks)
-    
-    print(f"\n[STEP 5 - SUCCESS] Local Reverse Transformation (Decryption) completed.")
-    for idx, chunk in enumerate(decrypted_chunks):
-        print(f"  -> Decrypted Chunk {idx + 1}: {chunk}")
+    # -----------------------------------------------------------------
+    # STEP 7: Global Reverse Transformation (Sort Back by Prime Weights)
+    # -----------------------------------------------------------------
+    print("\n" + "-" * 75)
+    print("[STEP 6 - DECRYPTION] Global Reverse Transformation (Un-shuffling)...")
+    global_reverse = GlobalReverseTransformer(batch_size=100)
+    reordered_chunks = global_reverse.reverse_global(filtered_chunks, prime_weights)
+    for i, c in enumerate(reordered_chunks[:3], 1):
+        print(f"   Reordered Chunk {i}: {c}")
 
-    # 7. Step 6: Combiner Module (Restore back to plaintext)
-    # တတိယအဆင့် (ပြန်ဖြည်စဉ်) — Combiner ဖြင့် Chunk များကို ပြန်လည်စုစည်းပြီး မူလစာသားအဖြစ် ပြောင်းလဲခြင်း
-    combiner = DataCombiner()
-    restored_text = combiner.combine_and_restore(decrypted_chunks)
+    # -----------------------------------------------------------------
+    # STEP 8: Local Reverse Transformation (Deciphering Bytes)
+    # -----------------------------------------------------------------
+    print("\n" + "-" * 75)
+    print("[STEP 7 - DECRYPTION] Local Reverse Transformation (De-confusion)...")
+    local_reverse = LocalReverseTransformer(chunk_size=12)
+    decrypted_chunks = local_reverse.reverse_chunks(reordered_chunks)
+    for i, c in enumerate(decrypted_chunks[:3], 1):
+        print(f"   Decrypted Chunk {i}: {c}")
+
+    # -----------------------------------------------------------------
+    # STEP 9: Combiner Layer (Restoring Text)
+    # -----------------------------------------------------------------
+    print("\n" + "-" * 75)
+    print("[STEP 8 - DECRYPTION] Restoring Original Text via Combiner...")
+    combiner = Combiner()
+    restored_text = combiner.to_text(decrypted_chunks)
     
-    print("\n" + "=" * 65)
-    print(f"[STEP 6 - SUCCESS] Combiner successfully restored the text!")
-    print(f"[*] Original Text : {user_input}")
-    print(f"[*] Restored Text : {restored_text}")
-    print("=" * 65)
-    
-    # Final Verification / အမှန်ကန်ဆုံး ဟုတ်မဟုတ် စစ်ဆေးခြင်း
+    print("\n" + "=" * 75)
+    print(f"[+] Original Text : {user_input}")
+    print(f"[+] Restored Text : {restored_text}")
+    print("=" * 75)
+
     if user_input == restored_text:
-        print("\nSUCCESS: The entire Layered Pipeline verified perfectly!")
+        print("\n[SUCCESS] The entire Layered Pipeline with Decoy Injection verified perfectly!")
     else:
-        print("\nFAILURE: Restored text does not match original text.")
+        print("\n[FAILED] Mismatch found in restored text!")
 
 if __name__ == "__main__":
     main()
