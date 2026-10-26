@@ -43,9 +43,18 @@ class GlobalForwardTransformer:
                 prime_weight = primes[current_batch_size - 1 - idx]
                 indexed_batch.append((prime_weight, chunk))
 
-            # Random shuffle လོပ်မည့်အစား prime_weight များကို အခြေခံ၍ နေရာချခြင်း (သို့မဟုတ်) 
-            # Reverse sort ဖြင့် Shuffling လုပ်ခြင်း
-            indexed_batch.sort(key=lambda x: x[0], reverse=True)
+            # --- [ပြင်ဆင်ရန်] ---
+            # Prime weight များကို အခြေခံ၍ တကယ့် Diffusion (Random/Permutation) ဖြစ်စေရန် 
+            # ဥပမာ - prime weight များကို key အဖြစ်သုံးပြီး random shuffle လုပ်ခြင်း (သို့မဟုတ်) 
+            # prime များကို index အဖြစ် တွက်ချက်၍ နေရာလွဲပေးခြင်း
+            import random
+            # Deterministic ဖြစ်စေရန် prime weights ပေါင်းုစုမှုကို seed အဖြစ် သုံးနိုင်သည်
+            seed_val = sum(primes)
+            rng = random.Random(seed_val)
+            
+            # Batch ထဲရှိ chunk များကို အမှန်တကယ် နေရာလွဲပေးခြင်း (Permutation)
+            rng.shuffle(indexed_batch)
+            # -------------------
 
             final_batch_chunks = [item[1] for item in indexed_batch]
             batch_weights = [item[0] for item in indexed_batch]

@@ -34,3 +34,8 @@ Clone the repository and run the main execution script:
 git clone [https://github.com/kyawthuramyo/math_security_protocol.git](https://github.com/kyawthuramyo/math_security_protocol.git)
 cd math_security_protocol
 python main.py
+
+📥 **Download Full Architecture Specification:** [View PDF Technical Whitepaper](./v5_technical_specification.pdf)
+
+### 📺 Project Demo Video
+👉 [Click here to watch the 3-minute Video Demonstration on YouTube](https://www.youtube.com/watch?v=u7Sg_BTvxyA&t=47s)
